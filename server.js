@@ -9,7 +9,7 @@ class FetchingBigReqNumbers {
   constructor(maxRequestsNumber, arr) {
     this.iteratorValue = 0;
     this.maxRequestsNumber =
-      maxRequestsNumber > arr.length ? maxRequestsNumber : arr.length;
+      maxRequestsNumber > arr.length ? arr.length : maxRequestsNumber;
     this.arr = arr;
     this.finished = false;
   }
@@ -95,7 +95,6 @@ async function deletFromShopifyStore(handle) {
     data = await getProductId.json();
   let { productByHandle } = data.data;
   let id = "Not Found";
-  console.log("p", typeof productByHandle);
   if (productByHandle && productByHandle !== null && productByHandle.id) {
     id = productByHandle.id;
     const resp = await fetch(
