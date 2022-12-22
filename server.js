@@ -8,13 +8,19 @@ let requestsArray = [],
 class FetchingBigReqNumbers {
   constructor(maxRequestsNumber, arr) {
     this.iteratorValue = 0;
-    this.maxRequestsNumber = maxRequestsNumber;
+    this.maxRequestsNumber =
+      maxRequestsNumber > arr.length ? maxRequestsNumber : arr.length;
     this.arr = arr;
+    this.finished = false;
   }
 
   runIterator() {
-    for (; this.iterator < this.maxRequestsNumber; this.iterator += 1) {
-      console.log(this.iterator);
+    for (
+      ;
+      this.iterator < this.maxRequestsNumber && !this.finished;
+      this.iterator += 1
+    ) {
+      // console.log(this.iterator);
     }
   }
 
@@ -23,6 +29,7 @@ class FetchingBigReqNumbers {
   }
   set iterator(value) {
     if (value > this.arr.length) {
+      this.finished = true;
       console.log(this.arr.length + " request finished!");
       return;
     }
@@ -32,7 +39,7 @@ class FetchingBigReqNumbers {
       res();
     });
     promise.then(() => {
-      setTimeout(() => {}, Math.floor(Math.random() * 100));
+      setTimeout(() => {}, Math.floor(Math.random() * 500));
       this.iterator = this.iterator + 1;
       //   console.log(this.iteratorValue);
     });
@@ -60,13 +67,12 @@ function readCSVFile() {
 }
 
 function runDeletingProcess(array) {
-  fetchingHandler = new FetchingBigReqNumbers(10, requestsArray);
-  console.log(fetchingHandler.iterator);
+  fetchingHandler = new FetchingBigReqNumbers(10, array);
   fetchingHandler.runIterator();
 }
 
-async function deletFromShopifyStore(id) {
-  const resp = await fetch(
+async function deletFromShopifyStore(handle) {
+  const getProductId = await fetch(
       "https://freelancing-project.myshopify.com/admin/api/2022-10/graphql.json",
       {
         method: "POST",
@@ -74,7 +80,33 @@ async function deletFromShopifyStore(id) {
           "Content-Type": "application/graphql",
           "X-Shopify-Access-Token": "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",
         },
-        body: `mutation {
+        body: `query {
+          productByHandle(handle: "vqaewr") {
+            id
+            handle
+            title
+            tags
+            productType
+            vendor
+          }
+        }`,
+      }
+    ),
+    data = await getProductId.json();
+  let { productByHandle } = data.data;
+  let id = "Not Found";
+  console.log("p", typeof productByHandle);
+  if (productByHandle && productByHandle !== null && productByHandle.id) {
+    id = productByHandle.id;
+    const resp = await fetch(
+        "https://freelancing-project.myshopify.com/admin/api/2022-10/graphql.json",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/graphql",
+            "X-Shopify-Access-Token": "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",
+          },
+          body: `mutation {
             productDelete(input: {id: "${id}"}) {
               deletedProductId
               userErrors {
@@ -83,13 +115,15 @@ async function deletFromShopifyStore(id) {
               }
             }
           }`,
-      }
-    ),
-    response = await resp.json();
-  console.log();
-  console.log("from delete function:", JSON.stringify(response));
-  console.log();
-  return response;
+        }
+      ),
+      response = await resp.json();
+    console.log();
+    console.log("from delete function:", JSON.stringify(response));
+    console.log();
+    return response;
+  }
+  console.log("Id:", id, " ; ", "Handle:", handle);
 }
 
 const app = express();
