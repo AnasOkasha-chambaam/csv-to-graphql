@@ -81,13 +81,9 @@ async function deletFromShopifyStore(handle) {
           "X-Shopify-Access-Token": "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",
         },
         body: `query {
-          productByHandle(handle: "vqaewr") {
+          productByHandle(handle: "${handle}") {
             id
             handle
-            title
-            tags
-            productType
-            vendor
           }
         }`,
       }
@@ -95,6 +91,7 @@ async function deletFromShopifyStore(handle) {
     data = await getProductId.json();
   let { productByHandle } = data.data;
   let id = "Not Found";
+  console.log(data.data);
   if (productByHandle && productByHandle !== null && productByHandle.id) {
     id = productByHandle.id;
     const resp = await fetch(
